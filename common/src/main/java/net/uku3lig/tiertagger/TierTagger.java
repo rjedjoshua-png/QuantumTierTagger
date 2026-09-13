@@ -6,6 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.llamalad7.mixinextras.lib.semver.ParseException;
 import com.llamalad7.mixinextras.lib.semver.Version;
+import com.mojang.blaze3d.platform.InputConstants;
 import lombok.Getter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
@@ -18,7 +19,6 @@ import net.uku3lig.tiertagger.model.GameMode;
 import net.uku3lig.tiertagger.model.PlayerInfo;
 import net.uku3lig.ukulib.config.ConfigManager;
 import net.uku3lig.ukulib.utils.Ukutils;
-import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +58,7 @@ public class TierTagger {
 
         TierCache.init();
 
-        Ukutils.registerKeybinding(new KeyMapping("tiertagger.keybind.gamemode", GLFW.GLFW_KEY_UNKNOWN, KeyMapping.Category.register(Identifier.fromNamespaceAndPath("tiertagger", "key"))),
+        Ukutils.registerKeybinding(new KeyMapping("tiertagger.keybind.gamemode", InputConstants.UNKNOWN.getValue(), KeyMapping.Category.register(Identifier.fromNamespaceAndPath("tiertagger", "key"))),
                 mc -> {
                     GameMode next = TierCache.findNextMode(manager.getConfig().getGameMode());
                     manager.getConfig().setGameMode(next.id());

@@ -65,7 +65,7 @@ public class PlayerSearchScreen extends CloseableScreen {
     }
 
     private void loadAndShowProfile() {
-        String username = this.textField.getText();
+        String username = this.textField.getValue();
         this.searching = true;
         this.searchButton.setMessage(Component.translatable("tiertagger.search.loading"));
 
@@ -94,9 +94,9 @@ public class PlayerSearchScreen extends CloseableScreen {
 
     @Override
     public void resize(int width, int height) {
-        String string = this.textField.getText();
+        String string = this.textField.getValue();
         this.init(width, height);
-        this.textField.setText(string);
+        this.textField.setValue(string);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package net.uku3lig.tiertagger.mixin;
 
 import com.llamalad7.mixinextras.lib.semver.Version;
+import com.mojang.blaze3d.Blaze3D;
 import net.uku3lig.tiertagger.TierTagger;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -8,13 +9,13 @@ import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.Util;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.net.URI;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Mixin(TitleScreen.class)
@@ -53,8 +54,8 @@ public class MixinTitleScreen extends Screen {
             Minecraft.getInstance().gui.setScreen(new ConfirmScreen(
                     b -> {
                         if (b) {
-                            String url = "https://modrinth.com/mod/tiertagger/version/" + latestVersion;
-                            Util.getPlatform().openUri(url);
+                            URI uri = URI.create("https://modrinth.com/mod/tiertagger/version/" + latestVersion);
+                            Blaze3D.openUri(uri);
                         }
 
                         Minecraft.getInstance().gui.setScreen(this);
