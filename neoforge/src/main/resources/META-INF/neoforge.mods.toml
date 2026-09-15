@@ -7,28 +7,29 @@ modId = "tiertagger"
 displayName = "TierTagger"
 version = "${version}"
 
-logoFile = "assets/tiertagger/icon.png"
+iconFile = "assets/tiertagger/icon.png"
 authors = "uku, netiyiy (original creator)"
 description = "Display player's PvP Tiers in their nametag!"
+displayURL = "https://modrinth.com/project/dpkYdLu5"
 
 [[dependencies.tiertagger]]
 modId = "minecraft"
 type = "required"
-versionRange = "[26.2,)"
+versionRange = "[26.3,)"
 ordering = "NONE"
 side = "CLIENT"
 
 [[dependencies.tiertagger]]
 modId = "neoforge"
 type = "required"
-versionRange = "[26.2.0.0-beta,)"
+versionRange = "[26.3.0.0-beta,)"
 ordering = "NONE"
 side = "CLIENT"
 
 [[dependencies.tiertagger]]
 modId = "ukulib"
 type = "required"
-versionRange = "[2.1.0,3)"
+versionRange = "[2.2.0,3)"
 ordering = "NONE"
 side = "CLIENT"
 
