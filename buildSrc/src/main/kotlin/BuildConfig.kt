@@ -5,9 +5,9 @@ object BuildConfig {
     const val FABRIC_API_VERSION: String = "0.160.5+26.3"
     const val UKULIB_VERSION: String = "2.2.0+26.3"
 
-    const val MOD_VERSION: String = "2.7.0"
+    const val MOD_VERSION: String = "1.0.0"
 
-    const val MODRINTH_PROJECT_ID: String = "dpkYdLu5"
+    const val MODRINTH_PROJECT_ID: String = "YOUR-MODRINTH-ID-HERE"
 
     fun createVersionString(): String {
         return "$MOD_VERSION+mc$MINECRAFT_VERSION"
