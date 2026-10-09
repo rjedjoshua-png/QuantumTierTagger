@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 public class TTConfigScreen extends TabbedConfigScreen<TierTaggerConfig> {
     public TTConfigScreen(Screen parent) {
-        super("TierTagger Config", parent, TierTagger.getManager());
+        super("CommunityTierTagger Config", parent, TierTagger.getManager());
     }
 
     @Override
@@ -57,18 +57,23 @@ public class TTConfigScreen extends TabbedConfigScreen<TierTaggerConfig> {
         protected WidgetCreator[] getWidgets(TierTaggerConfig config) {
             Optional<TierList> current = TierList.findByUrl(config.getApiUrl());
 
-            List<WidgetCreator> widgets = Arrays.stream(TierList.values())
-                    .map(t -> {
-                        boolean isCurrent = current.isPresent() && current.get() == t;
-                        return new SimpleButton(Component.literal(t.styledName(isCurrent)), _ -> {
-                            config.setApiUrl(t.getUrl());
-                            TierTagger.getManager().saveConfig();
-                            TTConfigScreen.this.onClose();
-                            TierCache.init();
-                            Ukutils.sendToast(Component.literal("Tierlist changed to " + t.getName() + "!"), Component.literal("Reloading tiers..."));
-                        }, !isCurrent);
-                    })
-                    .collect(Collectors.toList());
+            List<WidgetCreator> widgets = new ArrayList<>();
+
+            List<TierList> cached = TierList.cached();
+            if (cached.isEmpty()) {
+                widgets.add(new SimpleButton(Component.literal("Loading communities... (restart the game if stuck)"), _ -> {}, false));
+            } else {
+                for (TierList t : cached) {
+                    boolean isCurrent = current.isPresent() && current.get().getSlug().equalsIgnoreCase(t.getSlug());
+                    widgets.add(new SimpleButton(Component.literal(t.styledName(isCurrent)), _ -> {
+                        config.setApiUrl(t.apiUrl());
+                        TierTagger.getManager().saveConfig();
+                        TTConfigScreen.this.onClose();
+                        TierCache.init();
+                        Ukutils.sendToast(Component.literal("Switched to " + t.getName() + "!"), Component.literal("Reloading tiers..."));
+                    }, !isCurrent));
+                }
+            }
 
             if (current.isEmpty()) {
                 widgets.add(new SimpleButton(Component.literal("Custom (selected, " + config.getApiUrl() + ")"), _ -> {}, false));
@@ -85,7 +90,6 @@ public class TTConfigScreen extends TabbedConfigScreen<TierTaggerConfig> {
 
         @Override
         protected WidgetCreator[] getWidgets(TierTaggerConfig config) {
-            // i genuinely don't understand but chaining the calls just EXPLODES????
             Comparator<Map.Entry<String, Integer>> comparator = Comparator.comparing(e -> e.getKey().charAt(2));
             comparator = comparator.thenComparing(e -> e.getKey().charAt(0));
 
