@@ -18,22 +18,16 @@ import java.util.Optional;
 @AllArgsConstructor
 public class TierTaggerConfig implements Serializable {
     private boolean enabled = true;
-    private String gameMode = "vanilla";
+    private String gameMode = "sword";
     private boolean showRetired = true;
     private HighestMode highestMode = HighestMode.NOT_FOUND;
     private boolean showIcons = true;
     private boolean playerList = true;
     private int retiredColor = 0xa2d6ff;
-    // note: this is a GSON internal class. this *might* break in the future
     private LinkedTreeMap<String, Integer> tierColors = defaultColors();
 
-    // === internal stuff ===
-
-    /**
-     * <p>the field was renamed to do a little trolling and force it setting to the default value in players' config</p>
-     * <p>previous name(s): {@code baseUrl}</p>
-     */
-    private String apiUrl = "https://mctiers.com/api";
+    /** Base api URL with a slug query param, like "https://quantum-tierlist.vercel.app/api/v2?slug=pvt" */
+    private String apiUrl = "https://quantum-tierlist.vercel.app/api/v2?slug=";
 
     public GameMode getGameMode() {
         Optional<GameMode> opt = TierCache.findMode(this.gameMode);
