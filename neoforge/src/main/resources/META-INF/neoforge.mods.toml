@@ -1,32 +1,32 @@
 modLoader = "javafml"
 loaderVersion = "[4,)"
-license = "MIT"
+license = "MPL-2.0"
 
 [[mods]]
-modId = "tiertagger"
-displayName = "TierTagger"
+modId = "communitytiertagger"
+displayName = "CommunityTierTagger"
 version = "${version}"
 
-iconFile = "assets/tiertagger/icon.png"
-authors = "uku, netiyiy (original creator)"
-description = "Display player's PvP Tiers in their nametag!"
-displayURL = "https://modrinth.com/project/dpkYdLu5"
+iconFile = "assets/communitytiertagger/icon.png"
+authors = "uku, netiyiy (original creator), Evantiisx"
+description = "Display player's PvP tiers from any CommunityTierTagger-compatible community in their nametag!"
+displayURL = "https://modrinth.com/project/YOUR-MODRINTH-ID"
 
-[[dependencies.tiertagger]]
+[[dependencies.communitytiertagger]]
 modId = "minecraft"
 type = "required"
 versionRange = "[26.3,)"
 ordering = "NONE"
 side = "CLIENT"
 
-[[dependencies.tiertagger]]
+[[dependencies.communitytiertagger]]
 modId = "neoforge"
 type = "required"
 versionRange = "[26.3.0.0-beta,)"
 ordering = "NONE"
 side = "CLIENT"
 
-[[dependencies.tiertagger]]
+[[dependencies.communitytiertagger]]
 modId = "ukulib"
 type = "required"
 versionRange = "[2.2.0,3)"
@@ -34,4 +34,4 @@ ordering = "NONE"
 side = "CLIENT"
 
 [[mixins]]
-config = "TierTagger.mixins.json"
+config = "CommunityTierTagger.mixins.json"
