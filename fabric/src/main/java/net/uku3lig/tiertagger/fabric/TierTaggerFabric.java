@@ -1,11 +1,9 @@
 package net.uku3lig.tiertagger.fabric;
 
-import com.llamalad7.mixinextras.lib.semver.Version;
 import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -25,10 +23,7 @@ import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal;
 public class TierTaggerFabric implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
-        // noinspection OptionalGetWithoutIsPresent: the mod is you know, loaded so yeah
-        String versionString = FabricLoader.getInstance().getModContainer(TierTagger.MOD_ID).get().getMetadata().getVersion().getFriendlyString();
-
-        TierTagger.onInitialize(Version.parse(versionString));
+        TierTagger.onInitialize();
 
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, _) -> dispatcher.register(
                 literal(TierTagger.MOD_ID)
@@ -48,7 +43,7 @@ public class TierTaggerFabric implements ClientModInitializer {
         if (rankings.isPresent()) {
             ctx.getSource().sendFeedback(printPlayerInfo(selector.name(), rankings.get()));
         } else {
-            ctx.getSource().sendFeedback(Component.literal("[TierTagger] Searching..."));
+            ctx.getSource().sendFeedback(Component.literal("[CommunityTierTagger] Searching..."));
             TierCache.searchPlayer(selector.name())
                     .thenAccept(p -> Minecraft.getInstance().execute(() -> ctx.getSource().sendFeedback(printPlayerInfo(selector.name(), p.rankings()))))
                     .exceptionally(_ -> {
