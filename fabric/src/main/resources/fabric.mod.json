@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "id": "tiertagger",
+  "id": "communitytiertagger",
   "version": "${version}",
-  "name": "TierTagger",
-  "description": "Display player's PvP Tiers in their nametag!",
-  "authors": ["uku", "netiyiy (original creator)"],
+  "name": "CommunityTierTagger",
+  "description": "Display player's PvP tiers from any CommunityTierTagger-compatible community in their nametag!",
+  "authors": ["uku", "netiyiy (original creator)", "Evantiisx"],
   "contact": {
-    "sources": "https://github.com/mctiers-dev/TierTagger.git"
+    "sources": "https://github.com/YOUR-USERNAME/CommunityTierTagger"
   },
   "license": "MPL-2.0",
-  "icon": "assets/tiertagger/icon.png",
+  "icon": "assets/communitytiertagger/icon.png",
   "environment": "client",
   "entrypoints": {
     "client": [
@@ -20,7 +20,7 @@
     ]
   },
   "mixins": [
-    "TierTagger.mixins.json"
+    "CommunityTierTagger.mixins.json"
   ],
   "depends": {
     "minecraft": ">=26.3",
