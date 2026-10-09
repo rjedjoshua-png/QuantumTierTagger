@@ -21,16 +21,10 @@ public record PlayerInfo(String uuid, String name, Map<String, Ranking> rankings
                           @Nullable @SerializedName("peak_pos") Integer peakPos, long attained,
                           boolean retired) {
 
-        /**
-         * Lower is better.
-         */
         public int comparableTier() {
             return tier * 2 + pos;
         }
 
-        /**
-         * Lower is better.
-         */
         public int comparablePeak() {
             if (peakTier == null || peakPos == null) {
                 return Integer.MAX_VALUE;
@@ -52,6 +46,7 @@ public record PlayerInfo(String uuid, String name, Map<String, Ranking> rankings
 
     private static final Map<String, Integer> REGION_COLORS = Map.of(
             "NA", 0xff6a6e,
+            "US", 0xff6a6e,
             "EU", 0x6aff6e,
             "SA", 0xff9900,
             "AU", 0xf6b26b,
@@ -60,9 +55,27 @@ public record PlayerInfo(String uuid, String name, Map<String, Ranking> rankings
             "AF", 0x674ea7
     );
 
+    private static String buildUrl(String path, boolean appendSlug) {
+        String base = TierTagger.getManager().getConfig().getApiUrl();
+        // base looks like "https://quantum-tierlist.vercel.app/api/v2?slug=pvt"
+        String cleanBase;
+        String slugParam = "";
+        int q = base.indexOf('?');
+        if (q >= 0) {
+            slugParam = base.substring(q); // "?slug=pvt"
+            cleanBase = base.substring(0, q);
+        } else {
+            cleanBase = base;
+        }
+        if (appendSlug) {
+            return cleanBase + path + slugParam;
+        }
+        return cleanBase + path;
+    }
+
     public static CompletableFuture<PlayerInfo> get(HttpClient client, UUID uuid) {
-        String endpoint = TierTagger.getManager().getConfig().getApiUrl() + "/v2/profile/" + uuid;
-        final HttpRequest request = HttpRequest.newBuilder(URI.create(endpoint)).GET().build();
+        String endpoint = buildUrl("/profile/" + uuid, true);
+        HttpRequest request = HttpRequest.newBuilder(URI.create(endpoint)).GET().build();
 
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
@@ -73,20 +86,24 @@ public record PlayerInfo(String uuid, String name, Map<String, Ranking> rankings
     }
 
     public static CompletableFuture<Map<String, Ranking>> getRankings(HttpClient client, UUID uuid) {
-        String endpoint = TierTagger.getManager().getConfig().getApiUrl() + "/v2/profile/" + uuid + "/rankings";
-        final HttpRequest request = HttpRequest.newBuilder(URI.create(endpoint)).GET().build();
+        String endpoint = buildUrl("/profile/" + uuid + "/rankings", true);
+        HttpRequest request = HttpRequest.newBuilder(URI.create(endpoint)).GET().build();
 
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
-                .thenApply(s -> TierTagger.GSON.fromJson(s, new TypeToken<Map<String, Ranking>>() {}))
+                .thenApply(s -> {
+                    if (s == null || s.isBlank()) return Collections.<String, Ranking>emptyMap();
+                    Map<String, Ranking> m = TierTagger.GSON.fromJson(s, new TypeToken<Map<String, Ranking>>() {});
+                    return m != null ? m : Collections.<String, Ranking>emptyMap();
+                })
                 .whenComplete((_, t) -> {
                     if (t != null) TierTagger.getLogger().warn("Error getting player rankings ({})", uuid, t);
                 });
     }
 
     public static CompletableFuture<PlayerInfo> search(HttpClient client, String query) {
-        String endpoint = TierTagger.getManager().getConfig().getApiUrl() + "/v2/profile/by-name/" + query;
-        final HttpRequest request = HttpRequest.newBuilder(URI.create(endpoint)).GET().build();
+        String endpoint = buildUrl("/profile/by-name/" + query, true);
+        HttpRequest request = HttpRequest.newBuilder(URI.create(endpoint)).GET().build();
 
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
@@ -97,10 +114,12 @@ public record PlayerInfo(String uuid, String name, Map<String, Ranking> rankings
     }
 
     public int getRegionColor() {
+        if (this.region == null) return 0xffffff;
         return REGION_COLORS.getOrDefault(this.region.toUpperCase(Locale.ROOT), 0xffffff);
     }
 
     public static Optional<NamedRanking> getHighestRanking(Map<String, Ranking> rankings) {
+        if (rankings == null) return Optional.empty();
         return rankings.entrySet().stream()
                 .filter(e -> e.getKey() != null)
                 .min(Comparator.comparingInt(e -> e.getValue().comparableTier()))
@@ -125,26 +144,18 @@ public record PlayerInfo(String uuid, String name, Map<String, Ranking> rankings
     }
 
     public PointInfo getPointInfo() {
-        if (this.points >= 400) {
-            return PointInfo.COMBAT_GRANDMASTER;
-        } else if (this.points >= 250) {
-            return PointInfo.COMBAT_MASTER;
-        } else if (this.points >= 100) {
-            return PointInfo.COMBAT_ACE;
-        } else if (this.points >= 50) {
-            return PointInfo.COMBAT_SPECIALIST;
-        } else if (this.points >= 20) {
-            return PointInfo.COMBAT_CADET;
-        } else if (this.points >= 10) {
-            return PointInfo.COMBAT_NOVICE;
-        } else if (this.points >= 1) {
-            return PointInfo.ROOKIE;
-        } else {
-            return PointInfo.UNRANKED;
-        }
+        if (this.points >= 400) return PointInfo.COMBAT_GRANDMASTER;
+        if (this.points >= 250) return PointInfo.COMBAT_MASTER;
+        if (this.points >= 100) return PointInfo.COMBAT_ACE;
+        if (this.points >= 50)  return PointInfo.COMBAT_SPECIALIST;
+        if (this.points >= 20)  return PointInfo.COMBAT_CADET;
+        if (this.points >= 10)  return PointInfo.COMBAT_NOVICE;
+        if (this.points >= 1)   return PointInfo.ROOKIE;
+        return PointInfo.UNRANKED;
     }
 
     public List<NamedRanking> getSortedTiers() {
+        if (this.rankings == null) return List.of();
         List<NamedRanking> tiers = new ArrayList<>(this.rankings.entrySet().stream()
                 .map(e -> e.getValue().asNamed(TierCache.findModeOrUgly(e.getKey())))
                 .toList());
