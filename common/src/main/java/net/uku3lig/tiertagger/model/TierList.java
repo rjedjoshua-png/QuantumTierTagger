@@ -29,7 +29,6 @@ public class TierList {
         return DEFAULT_BASE + "/api/v2";
     }
 
-    /** The full URL the mod's config stores — this is what {@link TierTaggerConfig#getApiUrl()} returns. */
     public String apiUrl() {
         return apiBase() + "?slug=" + slug;
     }
@@ -57,6 +56,21 @@ public class TierList {
                         CACHE.clear();
                         CACHE.addAll(out);
                     }
+
+                    // Auto-select first tenant if none chosen yet
+                    if (!out.isEmpty()) {
+                        String current = TierTagger.getManager().getConfig().getApiUrl();
+                        boolean needsDefault = current == null
+                                || !current.contains("slug=")
+                                || current.endsWith("slug=")
+                                || findByUrl(current).isEmpty();
+                        if (needsDefault) {
+                            TierTagger.getManager().getConfig().setApiUrl(out.get(0).apiUrl());
+                            TierTagger.getManager().saveConfig();
+                            TierTagger.getLogger().info("Auto-selected tenant: {}", out.get(0).getSlug());
+                        }
+                    }
+
                     return out;
                 })
                 .whenComplete((_, t) -> {
@@ -77,10 +91,8 @@ public class TierList {
         }
     }
 
-    /** Finds a TierList whose apiUrl matches the given URL. */
     public static Optional<TierList> findByUrl(String url) {
         if (url == null) return Optional.empty();
-        // Extract slug from "?slug=xxx"
         String slug = null;
         int idx = url.indexOf("slug=");
         if (idx >= 0) {
@@ -88,11 +100,10 @@ public class TierList {
             int amp = slug.indexOf('&');
             if (amp >= 0) slug = slug.substring(0, amp);
         }
-        if (slug == null) return Optional.empty();
+        if (slug == null || slug.isBlank()) return Optional.empty();
         return findBySlug(slug);
     }
 
-    /** "🌐 [name]" style for the config buttons. */
     public String styledName(boolean current) {
         String s = name;
         if (current) s += " (selected)";
