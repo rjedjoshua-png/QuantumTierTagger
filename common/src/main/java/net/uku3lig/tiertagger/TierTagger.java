@@ -2,14 +2,9 @@ package net.uku3lig.tiertagger;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.llamalad7.mixinextras.lib.semver.ParseException;
-import com.llamalad7.mixinextras.lib.semver.Version;
 import com.mojang.blaze3d.platform.InputConstants;
 import lombok.Getter;
 import net.minecraft.ChatFormatting;
-import net.minecraft.SharedConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -17,25 +12,18 @@ import net.minecraft.resources.Identifier;
 import net.uku3lig.tiertagger.config.TierTaggerConfig;
 import net.uku3lig.tiertagger.model.GameMode;
 import net.uku3lig.tiertagger.model.PlayerInfo;
+import net.uku3lig.tiertagger.model.TierList;
 import net.uku3lig.ukulib.config.ConfigManager;
 import net.uku3lig.ukulib.utils.Ukutils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TierTagger {
-    public static final String MOD_ID = "tiertagger";
-    private static final String UPDATE_URL_FORMAT = "https://api.modrinth.com/v2/project/dpkYdLu5/version?game_versions=%s";
+    public static final String MOD_ID = "communitytiertagger";
 
     public static final Gson GSON = new GsonBuilder().create();
 
@@ -46,19 +34,10 @@ public class TierTagger {
     @Getter
     private static final HttpClient client = HttpClient.newHttpClient();
 
-    // === version checker stuff ===
-    @Getter
-    private static Version latestVersion = null;
-    @Getter
-    private static Version currentVersion;
-    private static final AtomicBoolean isObsolete = new AtomicBoolean(false);
+    public static void onInitialize() {
+        TierList.fetchAll(client).thenRun(TierCache::init);
 
-    public static void onInitialize(Version currentVer) {
-        currentVersion = currentVer;
-
-        TierCache.init();
-
-        Ukutils.registerKeybinding(new KeyMapping("tiertagger.keybind.gamemode", InputConstants.UNKNOWN.getValue(), KeyMapping.Category.register(Identifier.fromNamespaceAndPath("tiertagger", "key"))),
+        Ukutils.registerKeybinding(new KeyMapping("communitytiertagger.keybind.gamemode", InputConstants.UNKNOWN.getValue(), KeyMapping.Category.register(Identifier.fromNamespaceAndPath(MOD_ID, "key"))),
                 mc -> {
                     GameMode next = TierCache.findNextMode(manager.getConfig().getGameMode());
                     manager.getConfig().setGameMode(next.id());
@@ -68,8 +47,6 @@ public class TierTagger {
                         mc.player.sendOverlayMessage(message);
                     }
                 });
-
-        checkForUpdates();
     }
 
     public static Component appendTier(UUID uuid, Component text) {
@@ -134,8 +111,6 @@ public class TierTagger {
             MutableComponent tierText = getTierText(ranking.tier(), ranking.pos(), false);
 
             if (showPeak && ranking.comparablePeak() < ranking.comparableTier()) {
-                // warning caused by potential NPE by unboxing of peak{Tier,Pos} which CANNOT happen, see impl of comparablePeak
-                // noinspection DataFlowIssue
                 tierText.append(Component.literal(" (peak: ").withStyle(s -> s.withColor(ChatFormatting.GRAY)))
                         .append(getTierText(ranking.peakTier(), ranking.peakPos(), false))
                         .append(Component.literal(")").withStyle(s -> s.withColor(ChatFormatting.GRAY)));
@@ -151,47 +126,5 @@ public class TierTagger {
         } else {
             return manager.getConfig().getTierColors().getOrDefault(tier, 0xD3D3D3);
         }
-    }
-
-    private static void checkForUpdates() {
-        String versionParam = "[\"%s\"]".formatted(SharedConstants.getCurrentVersion().name());
-        String fullUrl = UPDATE_URL_FORMAT.formatted(URLEncoder.encode(versionParam, StandardCharsets.UTF_8));
-
-        HttpRequest request = HttpRequest.newBuilder(URI.create(fullUrl)).GET().build();
-
-        client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenApply(r -> {
-                    String body = r.body();
-                    JsonArray array = GSON.fromJson(body, JsonArray.class);
-
-                    if (!array.isEmpty()) {
-                        JsonObject root = array.get(0).getAsJsonObject();
-
-                        String versionName = root.get("name").getAsString();
-                        if (versionName != null && versionName.toLowerCase(Locale.ROOT).startsWith("[o")) {
-                            isObsolete.set(true);
-                        }
-
-                        String latestVer = root.get("version_number").getAsString();
-                        try {
-                            return Version.parse(latestVer);
-                        } catch (ParseException e) {
-                            logger.warn("Could not parse version number {}", latestVer);
-                        }
-                    }
-
-                    return null;
-                })
-                .exceptionally(t -> {
-                    logger.warn("Error checking for updates", t);
-                    return null;
-                }).thenAccept(v -> {
-                    logger.info("Found latest version {}", v);
-                    latestVersion = v;
-                });
-    }
-
-    public static boolean isObsolete() {
-        return isObsolete.get();
     }
 }
