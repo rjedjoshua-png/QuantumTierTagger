@@ -8,8 +8,7 @@
   ],
   "client": [
     "MixinPlayerTabOverlay",
-    "MixinTextDisplayRenderer",
-    "MixinTitleScreen"
+    "MixinTextDisplayRenderer"
   ],
   "injectors": {
     "defaultRequire": 1
