@@ -22,7 +22,7 @@ public class TierList {
     private final String name;
     private final String iconUrl;
 
-    private static final String DEFAULT_BASE = "https://tierhub.vercel.app";
+    private static final String DEFAULT_BASE = "https://quantum-tierlist.vercel.app";
     private static final List<TierList> CACHE = new ArrayList<>();
 
     public String apiBase() {
